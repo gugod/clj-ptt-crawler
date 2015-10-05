@@ -1,5 +1,4 @@
 (ns clj-ptt-crawler.crawl-board
-  (:import java.net.URL)
   (:require [clojure.string :as str]
             [net.cgrand.enlive-html :as enlive]
             [clj-http.client :as client])
@@ -9,10 +8,15 @@
 
 (defn harvest-board-indices
   [url-board-index board-name]
-  (-> url-board-index
-      (client/get {:insecure? true})
-      (enlive/html-snippet)
-      (enlive/select [[:a (enlive/attr-contains :href (str/join ["/bbs/" board-name "/index"]) )]])))
+  (->> (-> url-board-index
+           (client/get {:insecure? true})
+           (:body)
+           (enlive/html-snippet)
+           (enlive/select [[:a (enlive/attr-contains :href "/bbs/") (enlive/attr-contains :href "/index")]]))
+       (map #(:href (:attrs %)))
+       (filter #(not (.endsWith % "/index.html")))
+       (map (fn [it] {:url it, :page_number (->> it (re-find #"\d+") Integer/parseInt) }))
+       ))
 
 (defn -main [board_name output_dir]
   (println (harvest-board-indices (clojure.string/join "" [PTT_URL "/bbs/" board_name "/index.html"]) board_name)))
