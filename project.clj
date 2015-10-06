@@ -4,6 +4,7 @@
   :license {:name "CC0"
             :url "http://creativecommons.org/publicdomain/zero/1.0/"}
   :dependencies [[org.clojure/clojure "1.7.0"]
+                 [org.clojure/data.json "0.2.6"]
                  [clj-http "2.0.0"]
                  [enlive "1.1.6"]]
   :target-path "target/%s"
