@@ -39,7 +39,8 @@
   (let [output-file-name (.replace (.getPath f) ".html" ".json")
         article-dom (enlive/select (enlive/html-snippet (slurp f)) [:div#main-content])
         article-json (json/write-str (extract-article article-dom) :escape-unicode nil)]
-    (println "==> " output-file-name article-json )))
+    (spit output-file-name article-json)
+    (println "==> " output-file-name)))
 
 (defn -main [ptt_dir]
   (let [files (filter html-only (file-seq (clojure.java.io/file ptt_dir)))]
