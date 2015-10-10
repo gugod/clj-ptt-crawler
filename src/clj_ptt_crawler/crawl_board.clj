@@ -6,11 +6,12 @@
 
 (def PTT_URL "https://www.ptt.cc")
 
+(defn ptt-get [url] (:body (client/get url {:insecure? true})))
+
 (defn harvest-board-indices
   [url-board-index board-name]
   (->> (-> url-board-index
-           (client/get {:insecure? true})
-           (:body)
+           (ptt-get)
            (enlive/html-snippet)
            (enlive/select [[:a (enlive/attr-contains :href "/bbs/") (enlive/attr-contains :href "/index")]]))
        (map #(:href (:attrs %)))
@@ -21,8 +22,7 @@
 (defn harvest-articles
   [url board-name]
   (->> (-> url
-           (client/get {:insecure? true})
-           (:body)
+           (ptt-get)
            (enlive/html-snippet)
            (enlive/select [[:a (enlive/attr-starts :href (.concat "/bbs/" board-name)) (enlive/attr-ends :href ".html")]]))
        (filter #(not (.contains (:href (:attrs %)) "/index")))
@@ -36,7 +36,7 @@
     (let [output-file-name (str/join [output-dir "/" board-name "/" (:id a) ".html"])]
       (println "==> " output-file-name)
       (clojure.java.io/make-parents output-file-name)
-      (spit output-file-name (:body (client/get (:url a) {:insecure? true}))))))
+      (spit output-file-name (ptt-get (:url a))))))
 
 (defn -main [board_name output_dir]
   (doseq [x (->> (-> (clojure.string/join "" [PTT_URL "/bbs/" board_name "/index.html"])
