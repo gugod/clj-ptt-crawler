@@ -1,5 +1,6 @@
 (ns clj-ptt-crawler.convert-articles-html
-  (:require [clojure.data.json :as json]
+  (:require [clojure.string :as string]
+            [clojure.data.json :as json]
             [net.cgrand.enlive-html :as enlive])
   (:gen-class))
 
@@ -25,18 +26,22 @@
                   :ipdatetime (extract-text-content pt :span.push-ipdatetime),
                   }))))
 
+(defn extract-article-body [dom]
+  (string/join "" (enlive/select (enlive/at dom [:div.article-metaline-right] nil [:div.article-metaline] nil [:div.push] nil)
+                                 [:* :> enlive/text-node])))
+
 (defn extract-article [dom]
   {:meta (extract-meta-tag-value dom),
    :push (extract-push dom),
-   :body ""})
+   :body (extract-article-body dom)})
 
 (defn convert-this [f]
   (let [output-file-name (.replace (.getPath f) ".html" ".json")
-        article-dom (enlive/select (enlive/html-snippet (slurp f)) [:div#main-content])]
-    (prn "==> " output-file-name (extract-article article-dom))))
+        article-dom (enlive/select (enlive/html-snippet (slurp f)) [:div#main-content])
+        article-json (json/write-str (extract-article article-dom) :escape-unicode nil)]
+    (println "==> " output-file-name article-json )))
 
 (defn -main [ptt_dir]
   (let [files (filter html-only (file-seq (clojure.java.io/file ptt_dir)))]
     (doseq [f files]
       (convert-this f))))
-
