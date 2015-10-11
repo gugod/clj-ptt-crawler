@@ -10,14 +10,15 @@
 
 (defn harvest-board-indices
   [url-board-index board-name]
-  (->> (-> url-board-index
+  (let [pn-minmax (->> (-> url-board-index
            (ptt-get)
            (enlive/html-snippet)
            (enlive/select [[:a (enlive/attr-contains :href "/bbs/") (enlive/attr-contains :href "/index")]]))
        (map #(:href (:attrs %)))
        (filter #(not (.endsWith % "/index.html")))
-       (map (fn [it] {:url (.concat PTT_URL it), :page_number (->> it (re-find #"\d+") Integer/parseInt) }))
-       ))
+       (map (fn [it] (->> it (re-find #"\d+") Integer/parseInt))))]
+    (map (fn [pn] {:page_number pn, :url (str/join [PTT_URL "/bbs/" board-name "/index" (str pn) ".html"]) })
+         (range (first pn-minmax) (+ 1 (last pn-minmax))))))
 
 (defn harvest-articles
   [url board-name]
