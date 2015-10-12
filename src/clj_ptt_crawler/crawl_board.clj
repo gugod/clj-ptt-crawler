@@ -6,7 +6,8 @@
 
 (def PTT_URL "https://www.ptt.cc")
 
-(defn ptt-get [url] (:body (client/get url {:insecure? true})))
+(defn ptt-get [url]
+  (:body (client/get url {:insecure? true :cookies {"over18" {:discard true, :path "/", :secure false, :value "1", :version 0}}})))
 
 (defn harvest-board-indices
   [url-board-index board-name]
